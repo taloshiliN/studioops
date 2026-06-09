@@ -1,0 +1,13 @@
+### Health check
+GET http://localhost:8080/actuator/health
+
+### Create studio
+POST http://localhost:8080/api/studios
+Content-Type: application/json
+
+{
+  "name": "From Desert Dev"
+}
+
+### Get studios
+GET http://localhost:8080/api/studios
