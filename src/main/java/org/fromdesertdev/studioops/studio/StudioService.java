@@ -1,5 +1,6 @@
 package org.fromdesertdev.studioops.studio;
 
+import org.fromdesertdev.studioops.authorization.PermissionService;
 import org.fromdesertdev.studioops.membership.MembershipRole;
 import org.fromdesertdev.studioops.membership.StudioMembership;
 import org.fromdesertdev.studioops.membership.StudioMembershipRepository;
@@ -17,15 +18,18 @@ public class StudioService {
     private final StudioRepository studioRepository;
     private final AppUserRepository appUserRepository;
     private final StudioMembershipRepository studioMembershipRepository;
+    private final PermissionService permissionService;
 
     public StudioService(
             StudioRepository studioRepository,
             AppUserRepository appUserRepository,
-            StudioMembershipRepository studioMembershipRepository
+            StudioMembershipRepository studioMembershipRepository,
+            PermissionService permissionService
     ){
         this.studioRepository = studioRepository;
         this.appUserRepository = appUserRepository;
         this.studioMembershipRepository = studioMembershipRepository;
+        this.permissionService = permissionService;
     }
 
     @Transactional
@@ -42,8 +46,11 @@ public class StudioService {
 
     @Transactional(readOnly = true)
     public List<StudioResponse> findAll() {
-        return studioRepository.findAll()
+        AppUser user = permissionService.requireCurrentUser();
+
+        return studioMembershipRepository.findByUser_Id(user.getId())
                 .stream()
+                .map(StudioMembership::getStudio)
                 .map(StudioResponse::from)
                 .toList();
     }
