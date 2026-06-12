@@ -11,6 +11,9 @@ import org.fromdesertdev.studioops.marketing.MarketingActivityType;
 import org.fromdesertdev.studioops.milestone.Milestone;
 import org.fromdesertdev.studioops.milestone.MilestoneRepository;
 import org.fromdesertdev.studioops.milestone.MilestoneStatus;
+import org.fromdesertdev.studioops.workitem.WorkItem;
+import org.fromdesertdev.studioops.workitem.WorkItemRepository;
+import org.fromdesertdev.studioops.workitem.WorkItemStatus;
 import org.fromdesertdev.studioops.playtest.Playtest;
 import org.fromdesertdev.studioops.playtest.PlaytestRepository;
 import org.fromdesertdev.studioops.releasechecklist.ReleaseChecklistService;
@@ -40,6 +43,7 @@ class GameDashboardServiceTests {
     private ValidationDecisionRepository validationDecisionRepository;
     private TractionSnapshotRepository tractionSnapshotRepository;
     private MilestoneRepository milestoneRepository;
+    private WorkItemRepository workItemRepository;
     private PlaytestRepository playtestRepository;
     private MarketingActivityRepository marketingActivityRepository;
     private ReleaseChecklistService releaseChecklistService;
@@ -52,6 +56,7 @@ class GameDashboardServiceTests {
         validationDecisionRepository = mock(ValidationDecisionRepository.class);
         tractionSnapshotRepository = mock(TractionSnapshotRepository.class);
         milestoneRepository = mock(MilestoneRepository.class);
+        workItemRepository = mock(WorkItemRepository.class);
         playtestRepository = mock(PlaytestRepository.class);
         marketingActivityRepository = mock(MarketingActivityRepository.class);
         releaseChecklistService = mock(ReleaseChecklistService.class);
@@ -61,6 +66,7 @@ class GameDashboardServiceTests {
                 validationDecisionRepository,
                 tractionSnapshotRepository,
                 milestoneRepository,
+                workItemRepository,
                 playtestRepository,
                 marketingActivityRepository,
                 releaseChecklistService,
@@ -119,6 +125,23 @@ class GameDashboardServiceTests {
         when(releaseChecklistService.calculateReadiness(1L))
                 .thenReturn(new ReleaseReadinessResponse(1L, 2, 1, 50, true, List.of("Critical bugs resolved")));
 
+        WorkItem todoItem = mock(WorkItem.class);
+        WorkItem blockedItem = mock(WorkItem.class);
+        WorkItem doneItem = mock(WorkItem.class);
+
+        when(todoItem.getStatus()).thenReturn(WorkItemStatus.TODO);
+        when(todoItem.getDueDate()).thenReturn(LocalDate.now().minusDays(1));
+
+        when(blockedItem.getStatus()).thenReturn(WorkItemStatus.BLOCKED);
+        when(blockedItem.getDueDate()).thenReturn(LocalDate.now().plusDays(2));
+
+        when(doneItem.getStatus()).thenReturn(WorkItemStatus.DONE);
+        when(doneItem.getDueDate()).thenReturn(LocalDate.now().minusDays(3));
+
+        when(workItemRepository.findByGame_IdOrderByDueDateAscCreatedAtAsc(1L))
+                .thenReturn(List.of(todoItem, blockedItem, doneItem));
+
+
         GameDashboardResponse response = service.getDashboard(1L);
 
         assertEquals("Sandstorm Courier", response.game().title());
@@ -133,5 +156,11 @@ class GameDashboardServiceTests {
         assertEquals("Gameplay trailer", response.marketing().nextTitle());
         assertEquals(50, response.releaseReadiness().readinessPercentage());
         assertTrue(response.releaseReadiness().blocked());
+
+        assertEquals(3, response.workItems().total());
+        assertEquals(1, response.workItems().todo());
+        assertEquals(1, response.workItems().blocked());
+        assertEquals(1, response.workItems().done());
+        assertEquals(1, response.workItems().overdue());
     }
 }

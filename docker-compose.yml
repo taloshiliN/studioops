@@ -3,12 +3,37 @@ services:
     image: postgres:16
     container_name: studioops-postgres
     environment:
-      POSTGRES_DB: studioops
-      POSTGRES_USER: studioops
-      POSTGRES_PASSWORD: studioops
+      POSTGRES_DB: ${POSTGRES_DB:-studioops}
+      POSTGRES_USER: ${POSTGRES_USER:-studioops}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-studioops}
     ports:
       - "5432:5432"
     volumes:
-      - "studioops-data:/var/lib/postgresql/data"
+      - studioops-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: studioops-api
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-studioops}"
+      POSTGRES_USER: "${POSTGRES_USER:-studioops}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-studioops}"
+      PORT: 8080
+      SHOW_SQL: "false"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   studioops-data:

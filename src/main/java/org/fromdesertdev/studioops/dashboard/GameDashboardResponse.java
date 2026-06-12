@@ -16,6 +16,7 @@ public record GameDashboardResponse(
         ValidationSummary validation,
         TractionSummary traction,
         MilestoneSummary milestones,
+        WorkItemSummary workItems,
         PlaytestSummary playtests,
         MarketingSummary marketing,
         ReleaseReadinessSummary releaseReadiness
@@ -56,6 +57,17 @@ public record GameDashboardResponse(
             int inProgress,
             int blocked
     ) {
+    }
+
+    public record WorkItemSummary(
+            int total,
+            int todo,
+            int inProgress,
+            int blocked,
+            int done,
+            int overdue
+    ){
+
     }
 
     public record PlaytestSummary(

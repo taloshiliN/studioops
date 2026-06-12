@@ -12,6 +12,9 @@ import org.fromdesertdev.studioops.playtest.Playtest;
 import org.fromdesertdev.studioops.playtest.PlaytestRepository;
 import org.fromdesertdev.studioops.releasechecklist.ReleaseChecklistService;
 import org.fromdesertdev.studioops.releasechecklist.ReleaseReadinessResponse;
+import org.fromdesertdev.studioops.workitem.WorkItem;
+import org.fromdesertdev.studioops.workitem.WorkItemRepository;
+import org.fromdesertdev.studioops.workitem.WorkItemStatus;
 import org.fromdesertdev.studioops.traction.TractionSnapshot;
 import org.fromdesertdev.studioops.traction.TractionSnapshotRepository;
 import org.fromdesertdev.studioops.validation.ValidationDecision;
@@ -24,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.time.LocalDate;
 
 @Service
 public class GameDashboardService {
@@ -34,6 +38,7 @@ public class GameDashboardService {
     private final PlaytestRepository playtestRepository;
     private final MarketingActivityRepository marketingActivityRepository;
     private final ReleaseChecklistService releaseChecklistService;
+    private final WorkItemRepository workItemRepository;
     private final PermissionService permissionService;
 
     public GameDashboardService(
@@ -41,6 +46,7 @@ public class GameDashboardService {
             ValidationDecisionRepository validationDecisionRepository,
             TractionSnapshotRepository tractionSnapshotRepository,
             MilestoneRepository milestoneRepository,
+            WorkItemRepository workItemRepository,
             PlaytestRepository playtestRepository,
             MarketingActivityRepository marketingActivityRepository,
             ReleaseChecklistService releaseChecklistService,
@@ -53,6 +59,7 @@ public class GameDashboardService {
         this.playtestRepository = playtestRepository;
         this.marketingActivityRepository = marketingActivityRepository;
         this.releaseChecklistService = releaseChecklistService;
+        this.workItemRepository = workItemRepository;
         this.permissionService = permissionService;
     }
 
@@ -68,6 +75,7 @@ public class GameDashboardService {
                 validationSummary(gameId),
                 tractionSummary(gameId),
                 milestoneSummary(gameId),
+                workItemSummary(gameId),
                 playtestSummary(gameId),
                 marketingSummary(gameId),
                 releaseReadinessSummary(gameId)
@@ -130,6 +138,41 @@ public class GameDashboardService {
         return (int) milestones.stream()
                 .filter(milestone -> milestone.getStatus() == status)
                 .count();
+    }
+
+    private GameDashboardResponse.WorkItemSummary workItemSummary(Long gameId){
+        List<WorkItem> workItems = workItemRepository.findByGame_IdOrderByDueDateAscCreatedAtAsc(gameId);
+
+        int overdue = (int) workItems
+                .stream()
+                .filter(this::isOverdue)
+                .count();
+
+        return new GameDashboardResponse.WorkItemSummary(
+                workItems.size(),
+                countWorkItems(workItems, WorkItemStatus.TODO),
+                countWorkItems(workItems, WorkItemStatus.IN_PROGRESS),
+                countWorkItems(workItems, WorkItemStatus.BLOCKED),
+                countWorkItems(workItems, WorkItemStatus.DONE),
+                overdue
+        );
+    }
+
+    private int countWorkItems(
+        List<WorkItem> workItems,
+        WorkItemStatus status
+    ) {
+        return (int) workItems
+                .stream()
+                .filter(workItem -> workItem.getStatus() == status)
+                .count();
+    }
+
+    private boolean isOverdue(WorkItem workItem){
+        return workItem.getDueDate() != null
+                && workItem.getDueDate().isBefore(LocalDate.now())
+                && workItem.getStatus() != WorkItemStatus.DONE
+                && workItem.getStatus() != WorkItemStatus.CANCELLED;
     }
 
     private GameDashboardResponse.PlaytestSummary playtestSummary(Long gameId) {
