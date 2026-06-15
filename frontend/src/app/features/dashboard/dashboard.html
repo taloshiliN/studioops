@@ -1,0 +1,37 @@
+<div class="shell">
+  <aside>
+    <h2>StudioOps</h2>
+
+    <nav>
+      <a class="active">Overview</a>
+      <a>Games</a>
+      <a>Work items</a>
+      <a>Marketing</a>
+      <a>Release readiness</a>
+    </nav>
+
+    <button type="button" (click)="signOut()">Sign out</button>
+  </aside>
+
+  <main>
+    <header>
+      <div>
+
+      </div>
+      @if (user(); as currentUser){
+        <div>
+          <strong>{{currentUser.name}}</strong>
+          <p>{{currentUser.email}}</p>
+        </div>
+      }
+    </header>
+
+    <section>
+      <p class="eyebrow">Frontend connected</p>
+      <h2>Welcome to your StudioOps workspace</h2>
+      <p>
+        Angular Successfully authenticated with the spring boot api
+      </p>
+    </section>
+  </main>
+</div>
