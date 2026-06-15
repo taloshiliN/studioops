@@ -14,6 +14,13 @@ export const routes: Routes = [
       import('./features/dashboard/dashboard').then(m => m.Dashboard)
   },
   {
+    path: 'games/:gameId',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/game-dashboard/game-dashboard')
+        .then(m => m.GameDashboardPage)
+  },
+  {
     path: '',
     pathMatch: 'full',
     redirectTo: 'dashboard'

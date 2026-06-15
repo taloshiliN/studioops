@@ -1,0 +1,92 @@
+<div class="page-shell">
+  <header class="app-bar">
+    <button class="back-button" type="button" (click)="goBack()"><span aria-hidden="true">&larr;</span> All games</button>
+    <strong class="wordmark">StudioOps</strong>
+    <button class="quiet-button" type="button" (click)="signOut()">Sign out</button>
+  </header>
+
+  <main>
+    @if (loading()) {
+      <div class="state-panel">Loading game dashboard...</div>
+    } @else if (errorMessage()) {
+      <div class="state-panel error" role="alert">{{ errorMessage() }}</div>
+    } @else if (dashboard(); as data) {
+      <section class="game-heading" id="summary">
+        <div>
+          <p class="eyebrow">Game operating view</p>
+          <h1>{{ data.game.title }}</h1>
+          @if (game(); as gameDetails) { <p>{{ gameDetails.shortPitch }}</p> }
+        </div>
+        <div class="badges">
+          <span>{{ formatLabel(data.game.currentStage) }}</span>
+          <span>{{ formatLabel(data.game.validationStatus) }}</span>
+        </div>
+      </section>
+
+      <nav class="section-nav" aria-label="Game dashboard sections">
+        <a href="#summary">Summary</a><a href="#work-items">Work items</a><a href="#evidence">Evidence</a><a href="#release">Release</a>
+      </nav>
+
+      <section class="metrics" aria-label="Game health summary">
+        <article><span>Work items</span><strong>{{ data.workItems.total }}</strong><small>{{ data.workItems.inProgress }} in progress</small></article>
+        <article><span>Milestones</span><strong>{{ data.milestones.total }}</strong><small>{{ data.milestones.completed }} completed</small></article>
+        <article><span>Playtests</span><strong>{{ data.playtests.total }}</strong><small>Recorded sessions</small></article>
+        <article><span>Release readiness</span><strong>{{ data.releaseReadiness.readinessPercentage }}%</strong><small>{{ data.releaseReadiness.completedItems }} of {{ data.releaseReadiness.totalItems }} complete</small></article>
+      </section>
+
+      <section class="work-section" id="work-items">
+        <div class="section-heading">
+          <div><p class="eyebrow">Production</p><h2>Work items</h2><p>Plan, assign, and move the game forward.</p></div>
+          <button class="primary-button" type="button" (click)="toggleCreateForm()">{{ showCreateForm() ? 'Close form' : 'New work item' }}</button>
+        </div>
+
+        @if (showCreateForm()) {
+          <form class="task-form" [formGroup]="createForm" (ngSubmit)="createWorkItem()">
+            <label class="wide"><span>Title</span><input type="text" formControlName="title" placeholder="What needs to be done?" /></label>
+            <label class="wide"><span>Description</span><textarea formControlName="description" rows="3" placeholder="Add useful context for the assignee"></textarea></label>
+            <label><span>Priority</span><select formControlName="priority">@for (priority of priorities; track priority) { <option [value]="priority">{{ formatLabel(priority) }}</option> }</select></label>
+            <label><span>Due date</span><input type="date" formControlName="dueDate" /></label>
+            <label class="wide"><span>Assignee</span><select formControlName="assigneeUserId"><option value="">Unassigned</option>@for (member of members(); track member.userId) { <option [value]="member.userId">{{ member.userName }} - {{ formatLabel(member.role) }}</option> }</select></label>
+            @if (createForm.controls.title.touched && createForm.controls.title.invalid) { <p class="form-error wide">Give the work item a title.</p> }
+            <div class="form-actions wide"><button class="quiet-button" type="button" (click)="toggleCreateForm()">Cancel</button><button class="primary-button" type="submit" [disabled]="savingTask()">{{ savingTask() ? 'Creating...' : 'Create work item' }}</button></div>
+          </form>
+        }
+
+        @if (taskError()) { <div class="inline-error" role="alert">{{ taskError() }}</div> }
+
+        @if (workItems().length === 0) {
+          <div class="empty-state"><h3>No work items yet</h3><p>Create the first task for this game when production work begins.</p></div>
+        } @else {
+          <div class="task-list">
+            @for (item of workItems(); track item.id) {
+              <article class="task-row" [class.overdue]="isOverdue(item)">
+                <div class="task-main">
+                  <div class="task-title-line"><span class="priority" [class]="priorityClass(item.priority)">{{ formatLabel(item.priority) }}</span><h3>{{ item.title }}</h3></div>
+                  @if (item.description) { <p>{{ item.description }}</p> }
+                  <div class="task-meta"><span>{{ item.assigneeName || 'Unassigned' }}</span><span [class.alert]="isOverdue(item)">{{ item.dueDate ? formatDate(item.dueDate) : 'No due date' }}</span></div>
+                </div>
+                <label><span>Status</span><select [disabled]="isUpdating(item.id)" (change)="changeStatus(item, $event)">@for (status of statuses; track status) { <option [value]="status" [selected]="status === item.status">{{ formatLabel(status) }}</option> }</select></label>
+                <label><span>Assignee</span><select [disabled]="isUpdating(item.id)" (change)="changeAssignee(item, $event)"><option value="" [selected]="item.assigneeUserId === null">Unassigned</option>@for (member of members(); track member.userId) { <option [value]="member.userId" [selected]="member.userId === item.assigneeUserId">{{ member.userName }}</option> }</select></label>
+              </article>
+            }
+          </div>
+        }
+      </section>
+
+      <section class="detail-grid" id="evidence">
+        <article><div class="card-heading"><h2>Validation</h2><span>{{ formatLabel(data.game.validationStatus) }}</span></div>@if (data.validation) { <strong>{{ formatLabel(data.validation.latestDecision) }}</strong><p>{{ data.validation.reason }}</p> } @else { <p>No validation decision recorded yet.</p> }</article>
+        <article><div class="card-heading"><h2>Traction</h2><span>{{ formatLabel(data.traction?.latestSource ?? null) }}</span></div>@if (data.traction) { <dl><div><dt>Views</dt><dd>{{ data.traction.views }}</dd></div><div><dt>Downloads</dt><dd>{{ data.traction.downloads }}</dd></div><div><dt>Wishlists</dt><dd>{{ data.traction.wishlists }}</dd></div><div><dt>Rating</dt><dd>{{ data.traction.averageRating }}</dd></div></dl> } @else { <p>No traction snapshot recorded yet.</p> }</article>
+        <article><div class="card-heading"><h2>Marketing</h2><span>{{ data.marketing.upcoming }} upcoming</span></div><p>{{ data.marketing.total }} activities recorded.</p>@if (data.marketing.nextTitle) { <strong>{{ data.marketing.nextTitle }}</strong><p>{{ data.marketing.nextChannel }}</p> }</article>
+        <article><div class="card-heading"><h2>Latest playtest</h2><span>{{ data.playtests.total }} total</span></div>@if (data.playtests.latestSessionDate) { <strong>{{ formatDate(data.playtests.latestSessionDate) }}</strong><p>{{ data.playtests.latestMainFindings }}</p> } @else { <p>No playtest session recorded yet.</p> }</article>
+      </section>
+
+      <section class="release-card" id="release">
+        <div class="section-heading"><div><p class="eyebrow">Launch</p><h2>Release readiness</h2><p>{{ data.releaseReadiness.completedItems }} of {{ data.releaseReadiness.totalItems }} checklist items completed.</p></div><strong>{{ data.releaseReadiness.readinessPercentage }}%</strong></div>
+        <div class="progress" role="progressbar" [attr.aria-valuenow]="data.releaseReadiness.readinessPercentage" aria-valuemin="0" aria-valuemax="100"><span [style.width.%]="data.releaseReadiness.readinessPercentage"></span></div>
+        @if (data.releaseReadiness.blockingItems.length > 0) { <div class="blockers"><h3>Blocking items</h3><ul>@for (item of data.releaseReadiness.blockingItems; track item) { <li>{{ item }}</li> }</ul></div> } @else { <p class="ready-message">No release blockers recorded.</p> }
+      </section>
+    } @else {
+      <div class="state-panel error" role="alert">Dashboard data is unavailable.</div>
+    }
+  </main>
+</div>

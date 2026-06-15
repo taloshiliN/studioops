@@ -1,84 +1,68 @@
-.shell {
-  display: grid;
-  min-height: 100vh;
-  grid-template-columns: 230px 1fr;
-  background: #f4f7f5;
-}
+:host { display: block; min-height: 100vh; }
 
-aside {
-  display: flex;
-  flex-direction: column;
-  padding: 24px;
-  color: white;
-  background: #183b32;
+.shell { display: grid; min-height: 100vh; grid-template-columns: 232px minmax(0, 1fr); color: #17211e; background: #f3f6f4; }
+.sidebar { display: flex; position: sticky; top: 0; flex-direction: column; height: 100vh; padding: 24px 18px; color: #fff; background: #173a31; }
+.brand { display: flex; align-items: center; gap: 12px; margin: 0 8px 38px; }
+.brand span { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid rgb(255 255 255 / 35%); border-radius: 6px; font-size: 11px; font-weight: 800; }
+.brand strong { font-size: 18px; }
+nav { display: grid; gap: 4px; }
+nav a { padding: 11px 12px; border-radius: 6px; color: #bdd0c9; font-size: 14px; font-weight: 700; }
+nav a.active { color: #fff; background: #285a4b; }
+nav a[aria-disabled='true'] { opacity: .58; }
+.sign-out { margin-top: auto; border: 1px solid rgb(255 255 255 / 22%); border-radius: 6px; padding: 10px 12px; color: #fff; background: transparent; font: inherit; font-weight: 700; cursor: pointer; }
+main { min-width: 0; }
+.topbar { display: flex; align-items: center; justify-content: space-between; min-height: 92px; padding: 20px 36px; border-bottom: 1px solid #dce4e0; background: #fff; }
+.topbar h1, .topbar small { margin: 0; }
+.topbar h1 { margin-top: 4px; font-size: 24px; }
+.topbar small, .user-summary small { color: #71807a; }
+.user-summary { display: flex; align-items: center; gap: 10px; }
+.user-summary > span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 50%; color: #fff; background: #287a5f; font-weight: 800; }
+.user-summary div { display: grid; gap: 2px; }
+.workspace { padding: 36px; }
+.workspace-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-bottom: 28px; border-bottom: 1px solid #d7e0dc; }
+.workspace-heading h2, .workspace-heading p, .section-heading h3 { margin-top: 0; }
+.workspace-heading h2 { margin-bottom: 8px; font-size: 30px; }
+.workspace-heading p:last-child, .empty-state p:last-child { margin-bottom: 0; color: #66736e; }
+.eyebrow { margin: 0 0 9px; color: #287a5f; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.studio-picker { display: grid; flex: 0 0 260px; gap: 7px; color: #50605a; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+select { height: 44px; border: 1px solid #bdc9c4; border-radius: 6px; padding: 0 12px; color: #17211e; background: #fff; font: inherit; text-transform: none; }
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-top: 28px; border: 1px solid #d7e0dc; background: #d7e0dc; }
+.metrics article { display: grid; min-height: 128px; padding: 20px; background: #fff; }
+.metrics span, .metrics small { color: #71807a; }
+.metrics span { font-size: 13px; font-weight: 700; }
+.metrics strong { align-self: center; font-size: 30px; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; margin: 30px 0 16px; }
+.section-heading h3 { margin-bottom: 0; font-size: 18px; }
+.section-heading span { color: #71807a; font-size: 13px; }
+.game-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.game-card { display: grid; min-height: 290px; grid-template-rows: auto 1fr auto auto; gap: 20px; border: 1px solid #d5dfda; border-radius: 8px; padding: 20px; color: inherit; background: #fff; font: inherit; text-align: left; cursor: pointer; }
+.game-card:hover, .game-card:focus-visible { border-color: #287a5f; box-shadow: 0 0 0 2px rgb(40 122 95 / 10%); outline: none; }
+.card-topline { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.stage, .validation { font-size: 11px; font-weight: 800; text-transform: uppercase; }
+.stage { color: #1f684f; }
+.validation { color: #6a756f; }
+.game-card h4 { margin: 0 0 9px; font-size: 20px; }
+.game-card p { margin: 0; color: #66736e; line-height: 1.55; }
+dl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0; }
+dt { margin-bottom: 4px; color: #7b8883; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+dd { margin: 0; font-size: 13px; font-weight: 700; }
+.card-action { padding-top: 14px; border-top: 1px solid #e1e7e4; color: #287a5f; font-size: 13px; font-weight: 800; }
+.state-panel, .empty-state { margin-top: 28px; border: 1px solid #d5dfda; border-radius: 8px; padding: 30px; background: #fff; }
+.state-panel { color: #66736e; }
+.state-panel.error { border-color: #e2b5b0; color: #9a342f; background: #fff5f3; }
+.empty-state h2, .empty-state h3 { margin: 0 0 10px; }
+.empty-state.compact { min-height: 0; }
 
-  nav {
-    display: grid;
-    gap: 8px;
-    margin-top: 32px;
-  }
-
-  a {
-    padding: 11px;
-    border-radius: 6px;
-    color: #bdd0c9;
-  }
-
-  a.active {
-    color: white;
-    background: #285a4b;
-  }
-
-  button {
-    margin-top: auto;
-    padding: 10px;
-  }
-}
-
-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px 36px;
-  border-bottom: 1px solid #dce4e0;
-  background: white;
-
-  h1,
-  p {
-    margin: 4px 0 0;
-  }
-}
-
-section {
-  padding: 48px 36px;
-
-  h2 {
-    font-size: 32px;
-  }
-
-  p:last-child {
-    max-width: 680px;
-    color: #66736e;
-    line-height: 1.7;
-  }
-}
-
-.eyebrow {
-  color: #287a5f;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-@media (max-width: 700px) {
-  .shell {
-    grid-template-columns: 1fr;
-  }
-
-  aside {
-    min-height: auto;
-
-    nav {
-      display: none;
-    }
-  }
+@media (max-width: 1100px) { .game-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; padding: 16px; }
+  .brand { margin: 0; }
+  nav { display: none; }
+  .sign-out { position: absolute; top: 16px; right: 16px; margin: 0; }
+  .topbar, .workspace { padding: 24px; }
+  .user-summary div { display: none; }
+  .workspace-heading { align-items: stretch; flex-direction: column; }
+  .studio-picker { flex-basis: auto; }
+  .metrics, .game-grid { grid-template-columns: 1fr; }
 }
