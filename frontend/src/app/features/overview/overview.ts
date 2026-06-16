@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize } from 'rxjs';
 
 import { AuthService } from '../../core/auth.service';
 import { Game } from '../../core/game.model';
@@ -10,17 +10,16 @@ import { Studio } from '../../core/studio.model';
 import { StudioService } from '../../core/studio.service';
 
 @Component({
-  selector: 'app-dashboard',
-  templateUrl: './dashboard.html',
-  styleUrl: './dashboard.scss'
+  selector: 'app-overview',
+  templateUrl: './overview.html',
+  styleUrl: '../../layout/workspace-page.scss'
 })
-export class Dashboard implements OnInit {
+export class OverviewPage implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly studioService = inject(StudioService);
   private readonly gameService = inject(GameService);
   private readonly router = inject(Router);
 
-  readonly user = this.authService.user;
   readonly studios = signal<Studio[]>([]);
   readonly games = signal<Game[]>([]);
   readonly selectedStudioId = signal<number | null>(null);
@@ -31,53 +30,35 @@ export class Dashboard implements OnInit {
   readonly selectedStudio = computed(() =>
     this.studios().find(studio => studio.id === this.selectedStudioId()) ?? null
   );
-
   readonly validationCount = computed(() =>
     this.games().filter(game => game.currentStage === 'VALIDATION').length
   );
-
   readonly productionCount = computed(() =>
     this.games().filter(game => game.currentStage === 'PRODUCTION').length
   );
 
   ngOnInit(): void {
-    forkJoin({
-      user: this.authService.loadCurrentUser(),
-      studios: this.studioService.findAll()
-    })
+    this.studioService.findAll()
       .pipe(finalize(() => this.loadingWorkspace.set(false)))
       .subscribe({
-        next: ({ studios }) => {
+        next: studios => {
           this.studios.set(studios);
-
-          if (studios.length > 0) {
-            this.loadStudio(studios[0].id);
-          }
+          if (studios.length > 0) this.loadStudio(studios[0].id);
         },
         error: error => this.handleError(error, 'Unable to load your workspace.')
       });
   }
 
   changeStudio(event: Event): void {
-    const studioId = Number((event.target as HTMLSelectElement).value);
-    this.loadStudio(studioId);
+    this.loadStudio(Number((event.target as HTMLSelectElement).value));
   }
 
   openGame(gameId: number): void {
-    void this.router.navigate(['/games', gameId]);
-  }
-
-  signOut(): void {
-    this.authService.logout();
-    void this.router.navigate(['/login']);
+    void this.router.navigate(['/games', gameId], { fragment: 'summary' });
   }
 
   formatLabel(value: string): string {
-    return value
-      .toLowerCase()
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    return value.toLowerCase().split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   }
 
   private loadStudio(studioId: number): void {
@@ -85,7 +66,6 @@ export class Dashboard implements OnInit {
     this.games.set([]);
     this.errorMessage.set('');
     this.loadingGames.set(true);
-
     this.gameService.findByStudio(studioId)
       .pipe(finalize(() => this.loadingGames.set(false)))
       .subscribe({
@@ -96,10 +76,10 @@ export class Dashboard implements OnInit {
 
   private handleError(error: HttpErrorResponse, message: string): void {
     if (error.status === 401) {
-      this.signOut();
+      this.authService.logout();
+      void this.router.navigate(['/login']);
       return;
     }
-
     this.errorMessage.set(message);
   }
 }

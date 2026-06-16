@@ -37,18 +37,19 @@ public class GameService {
         Studio studio = studioRepository.findById(request.studioId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Studio not found"));
 
+        permissionService.requireStudioRole(
+                request.studioId(),
+                MembershipRole.OWNER,
+                MembershipRole.PRODUCER
+        );
+
         Game game = new Game(
                 studio,
                 request.title(),
                 request.shortPitch(),
                 request.genre(),
-                request.targetPlatforms()
-        );
-
-        permissionService.requireStudioRole(
-                request.studioId(),
-                MembershipRole.OWNER,
-                MembershipRole.PRODUCER
+                request.targetPlatforms(),
+                request.fontFamily()
         );
 
         return GameResponse.from(gameRepository.save(game));

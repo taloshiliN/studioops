@@ -5,6 +5,8 @@ import org.fromdesertdev.studioops.game.Game;
 import org.fromdesertdev.studioops.game.GameRepository;
 import org.fromdesertdev.studioops.game.GameStage;
 import org.fromdesertdev.studioops.game.ValidationStatus;
+import org.fromdesertdev.studioops.launchplan.LaunchPlanResponse;
+import org.fromdesertdev.studioops.launchplan.LaunchPlanService;
 import org.fromdesertdev.studioops.marketing.MarketingActivity;
 import org.fromdesertdev.studioops.marketing.MarketingActivityRepository;
 import org.fromdesertdev.studioops.marketing.MarketingActivityType;
@@ -46,6 +48,7 @@ class GameDashboardServiceTests {
     private WorkItemRepository workItemRepository;
     private PlaytestRepository playtestRepository;
     private MarketingActivityRepository marketingActivityRepository;
+    private LaunchPlanService launchPlanService;
     private ReleaseChecklistService releaseChecklistService;
     private PermissionService permissionService;
     private GameDashboardService service;
@@ -59,6 +62,7 @@ class GameDashboardServiceTests {
         workItemRepository = mock(WorkItemRepository.class);
         playtestRepository = mock(PlaytestRepository.class);
         marketingActivityRepository = mock(MarketingActivityRepository.class);
+        launchPlanService = mock(LaunchPlanService.class);
         releaseChecklistService = mock(ReleaseChecklistService.class);
         permissionService = mock(PermissionService.class);
         service = new GameDashboardService(
@@ -69,6 +73,7 @@ class GameDashboardServiceTests {
                 workItemRepository,
                 playtestRepository,
                 marketingActivityRepository,
+                launchPlanService,
                 releaseChecklistService,
                 permissionService
         );
@@ -122,6 +127,26 @@ class GameDashboardServiceTests {
         when(marketingActivityRepository.findByGame_IdOrderByScheduledForAscCreatedAtAsc(1L))
                 .thenReturn(List.of(completedActivity, nextActivity));
 
+        when(launchPlanService.findByGame(1L))
+                .thenReturn(new LaunchPlanResponse(
+                        10L,
+                        1L,
+                        "https://fromdesertdev.itch.io/sandstorm-courier",
+                        "https://store.steampowered.com/app/123/sandstorm-courier",
+                        "https://fromdesertdev.itch.io/sandstorm-courier-demo",
+                        "https://youtube.com/watch?v=trailer",
+                        LocalDate.of(2026, 8, 1),
+                        LocalDate.of(2026, 10, 1),
+                        LocalDate.of(2027, 2, 1),
+                        300,
+                        8,
+                        "Need a tighter trailer opening.",
+                        88,
+                        List.of("Prepare the trailer"),
+                        LocalDateTime.of(2026, 7, 1, 9, 0),
+                        LocalDateTime.of(2026, 7, 2, 9, 0)
+                ));
+
         when(releaseChecklistService.calculateReadiness(1L))
                 .thenReturn(new ReleaseReadinessResponse(1L, 2, 1, 50, true, List.of("Critical bugs resolved")));
 
@@ -154,6 +179,9 @@ class GameDashboardServiceTests {
         assertEquals(2, response.marketing().total());
         assertEquals(1, response.marketing().completed());
         assertEquals("Gameplay trailer", response.marketing().nextTitle());
+        assertEquals(88, response.launchPlan().readinessPercentage());
+        assertEquals(LocalDate.of(2027, 2, 1), response.launchPlan().targetLaunchDate());
+        assertEquals("Prepare the trailer", response.launchPlan().missingItems().get(0));
         assertEquals(50, response.releaseReadiness().readinessPercentage());
         assertTrue(response.releaseReadiness().blocked());
 

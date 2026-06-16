@@ -1,0 +1,144 @@
+<section class="workspace">
+  @if (loadingWorkspace()) {
+    <div class="state-panel">Loading games...</div>
+  } @else if (studios().length === 0) {
+    <div class="empty-state">
+      <p class="eyebrow">No studio yet</p>
+      <h2>Create a studio before adding games.</h2>
+    </div>
+  } @else {
+    <div class="workspace-heading">
+      <div>
+        <p class="eyebrow">Game portfolio</p>
+        <h2>{{ selectedStudio()?.name }}</h2>
+        <p>Open a game to inspect its validation evidence and operating health.</p>
+      </div>
+
+      <div class="heading-actions">
+        <button class="primary-button" type="button" (click)="toggleCreateForm()">
+          {{ showCreateForm() ? 'Close form' : 'New game' }}
+        </button>
+
+        <label class="studio-picker">
+          <span>Studio</span>
+          <select [value]="selectedStudioId()" (change)="changeStudio($event)">
+            @for (studio of studios(); track studio.id) {
+              <option [value]="studio.id">{{ studio.name }}</option>
+            }
+          </select>
+        </label>
+      </div>
+    </div>
+
+    @if (showCreateForm()) {
+      <form class="game-form" [formGroup]="createForm" (ngSubmit)="createGame()">
+        <div class="form-title">
+          <div>
+            <p class="eyebrow">Idea setup</p>
+            <h3>Create a game</h3>
+          </div>
+          <p>Capture the basic creative direction before production work starts.</p>
+        </div>
+
+        <label>
+          <span>Title</span>
+          <input type="text" formControlName="title" placeholder="Sandstorm Courier" />
+        </label>
+
+        <label class="wide">
+          <span>Short pitch</span>
+          <textarea rows="3" formControlName="shortPitch" placeholder="A desert delivery game about surviving impossible routes."></textarea>
+        </label>
+
+        <label>
+          <span>Genre</span>
+          <input type="text" formControlName="genre" placeholder="Strategy" />
+        </label>
+
+        <label>
+          <span>Target platforms</span>
+          <input type="text" formControlName="targetPlatforms" placeholder="PC, Steam Deck" />
+        </label>
+
+        <label>
+          <span>Font direction</span>
+          <select formControlName="fontFamily">
+            @for (font of fontOptions; track font) {
+              <option [value]="font">{{ font }}</option>
+            }
+          </select>
+        </label>
+
+        <div class="font-preview" [style.font-family]="createForm.controls.fontFamily.value">
+          <span>Preview</span>
+          <strong>{{ createForm.controls.title.value || 'Your Game Title' }}</strong>
+        </div>
+
+        @if (actionError()) {
+          <p class="form-error" role="alert">{{ actionError() }}</p>
+        }
+
+        <div class="form-actions">
+          <button class="primary-button" type="submit" [disabled]="savingGame()">
+            {{ savingGame() ? 'Creating...' : 'Create game' }}
+          </button>
+          <button class="quiet-button" type="button" (click)="toggleCreateForm()" [disabled]="savingGame()">
+            Cancel
+          </button>
+        </div>
+      </form>
+    }
+
+    @if (errorMessage()) {
+      <div class="state-panel error" role="alert">{{ errorMessage() }}</div>
+    } @else if (loadingGames()) {
+      <div class="state-panel">Loading games...</div>
+    } @else if (games().length === 0) {
+      <div class="empty-state">
+        <h3>No games found</h3>
+        <p>Create a game and it will appear here.</p>
+      </div>
+    } @else {
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Portfolio</p>
+          <h3>All games</h3>
+        </div>
+        <span>{{ games().length }} total</span>
+      </div>
+
+      <div class="game-grid">
+        @for (game of games(); track game.id) {
+          <button class="game-card" type="button" (click)="openGame(game.id)">
+            <div class="card-topline">
+              <span class="stage">{{ formatLabel(game.currentStage) }}</span>
+              <span class="validation">{{ formatLabel(game.validationStatus) }}</span>
+            </div>
+
+            <div>
+              <h4 [style.font-family]="displayFont(game.fontFamily)">{{ game.title }}</h4>
+              <p>{{ displayValue(game.shortPitch) }}</p>
+            </div>
+
+            <dl>
+              <div>
+                <dt>Genre</dt>
+                <dd>{{ displayValue(game.genre) }}</dd>
+              </div>
+              <div>
+                <dt>Platforms</dt>
+                <dd>{{ displayValue(game.targetPlatforms) }}</dd>
+              </div>
+              <div>
+                <dt>Font</dt>
+                <dd [style.font-family]="displayFont(game.fontFamily)">{{ displayFont(game.fontFamily) }}</dd>
+              </div>
+            </dl>
+
+            <span class="card-action">Open game dashboard <span aria-hidden="true">&rarr;</span></span>
+          </button>
+        }
+      </div>
+    }
+  }
+</section>

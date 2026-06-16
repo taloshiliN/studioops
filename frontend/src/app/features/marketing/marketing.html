@@ -1,0 +1,103 @@
+<section class="workspace">
+      @if (loadingWorkspace()) {
+        <div class="state-panel">Loading the marketing workspace...</div>
+      } @else if (studios().length === 0) {
+        <div class="empty-state"><p class="eyebrow">No studio yet</p><h2>Create a studio before planning marketing.</h2></div>
+      } @else {
+        <div class="workspace-heading">
+          <div>
+            <p class="eyebrow">Campaign workspace</p>
+            <h2>{{ selectedGame()?.title || 'Choose a game' }}</h2>
+            <p>Schedule outreach, track delivery, and preserve results for the next campaign.</p>
+          </div>
+
+          <div class="selectors">
+            <label><span>Studio</span><select [value]="selectedStudioId()" (change)="changeStudio($event)">@for (studio of studios(); track studio.id) { <option [value]="studio.id">{{ studio.name }}</option> }</select></label>
+            <label><span>Game</span><select [value]="selectedGameId()" (change)="changeGame($event)" [disabled]="games().length === 0">@for (game of games(); track game.id) { <option [value]="game.id">{{ game.title }}</option> }</select></label>
+          </div>
+        </div>
+
+        @if (selectedGame(); as game) {
+          <div class="game-status">
+            <div><span>Stage</span><strong>{{ formatLabel(game.currentStage) }}</strong></div>
+            <div><span>Validation</span><strong>{{ formatLabel(game.validationStatus) }}</strong></div>
+            <button class="quiet-button" type="button" (click)="openGame()">Open game dashboard</button>
+          </div>
+        }
+
+        <div class="metrics" aria-label="Marketing activity summary">
+          <article><span>Total activities</span><strong>{{ activities().length }}</strong><small>Recorded for this game</small></article>
+          <article><span>Upcoming</span><strong>{{ upcomingCount() }}</strong><small>Still to deliver</small></article>
+          <article><span>Completed</span><strong>{{ completedCount() }}</strong><small>Results captured</small></article>
+          <article [class.attention]="overdueCount() > 0"><span>Overdue</span><strong>{{ overdueCount() }}</strong><small>Needs attention</small></article>
+        </div>
+
+        <section class="activity-section">
+          <div class="section-heading">
+            <div><p class="eyebrow">Campaign schedule</p><h3>Marketing activities</h3></div>
+            @if (canManageMarketing()) {
+              <button class="primary-button" type="button" (click)="toggleCreateForm()">{{ showCreateForm() ? 'Close form' : 'New activity' }}</button>
+            }
+          </div>
+
+          @if (managementMessage()) {
+            <div class="permission-note">{{ managementMessage() }}</div>
+          }
+
+          @if (showCreateForm()) {
+            <form class="activity-form" [formGroup]="createForm" (ngSubmit)="createActivity()">
+              <div class="form-intro wide"><h3>Plan an activity</h3><p>Add the channel, delivery date, and the concrete piece of outreach.</p></div>
+              <label><span>Activity type</span><select formControlName="activityType">@for (type of activityTypes; track type) { <option [value]="type">{{ formatLabel(type) }}</option> }</select></label>
+              <label><span>Channel</span><input type="text" formControlName="channel" placeholder="YouTube, itch.io, X, event..." /></label>
+              <label class="wide"><span>Title</span><input type="text" formControlName="title" placeholder="Publish launch trailer" /></label>
+              <label><span>Scheduled for</span><input type="datetime-local" formControlName="scheduledFor" /></label>
+              @if ((createForm.controls.title.touched && createForm.controls.title.invalid) || (createForm.controls.channel.touched && createForm.controls.channel.invalid)) {
+                <p class="form-error wide">Add both a title and a channel.</p>
+              }
+              <div class="form-actions wide"><button class="quiet-button" type="button" (click)="toggleCreateForm()">Cancel</button><button class="primary-button" type="submit" [disabled]="savingActivity()">{{ savingActivity() ? 'Saving...' : 'Create activity' }}</button></div>
+            </form>
+          }
+
+          @if (actionError()) { <div class="state-panel error" role="alert">{{ actionError() }}</div> }
+          @if (errorMessage()) { <div class="state-panel error" role="alert">{{ errorMessage() }}</div> }
+
+          @if (loadingActivities()) {
+            <div class="state-panel">Loading marketing activities...</div>
+          } @else if (games().length === 0) {
+            <div class="empty-state"><h3>No games found</h3><p>Create a game before planning its marketing.</p></div>
+          } @else if (activities().length === 0) {
+            <div class="empty-state"><h3>No marketing activities yet</h3><p>Greenlight the game, then schedule the first audience-facing activity.</p></div>
+          } @else {
+            <div class="activity-list">
+              @for (activity of activities(); track activity.id) {
+                <article class="activity-row" [class.overdue]="isOverdue(activity)" [class.completed]="activity.completedAt">
+                  <div class="activity-date">
+                    @if (activity.scheduledFor) {
+                      <strong>{{ activity.scheduledFor | date:'dd' }}</strong><span>{{ activity.scheduledFor | date:'MMM' }}</span>
+                    } @else {
+                      <strong>--</strong><span>Unscheduled</span>
+                    }
+                  </div>
+                  <div class="activity-main">
+                    <div class="activity-topline"><span>{{ formatLabel(activity.activityType) }}</span><span class="status">{{ statusLabel(activity) }}</span></div>
+                    <h4>{{ activity.title }}</h4>
+                    <p>{{ activity.channel }}@if (activity.scheduledFor) { &middot; {{ activity.scheduledFor | date:'medium' }} }</p>
+                    @if (activity.resultNotes) { <blockquote>{{ activity.resultNotes }}</blockquote> }
+
+                    @if (completionFormActivityId() === activity.id) {
+                      <form class="completion-form" [formGroup]="completionForm" (ngSubmit)="completeActivity(activity.id)">
+                        <label><span>Result notes</span><textarea rows="3" formControlName="resultNotes" placeholder="What happened? Include useful outcomes and numbers."></textarea></label>
+                        <div class="form-actions"><button class="quiet-button" type="button" (click)="cancelCompletion()">Cancel</button><button class="primary-button" type="submit" [disabled]="completingActivityId() === activity.id">{{ completingActivityId() === activity.id ? 'Saving...' : 'Mark complete' }}</button></div>
+                      </form>
+                    }
+                  </div>
+                  @if (!activity.completedAt && canManageMarketing() && completionFormActivityId() !== activity.id) {
+                    <button class="complete-button" type="button" (click)="startCompletion(activity.id)">Complete</button>
+                  }
+                </article>
+              }
+            </div>
+          }
+        </section>
+      }
+</section>

@@ -24,7 +24,7 @@
       </section>
 
       <nav class="section-nav" aria-label="Game dashboard sections">
-        <a href="#summary">Summary</a><a href="#work-items">Work items</a><a href="#evidence">Evidence</a><a href="#release">Release</a>
+        <a href="#summary">Summary</a><a href="#launch-plan">Launch plan</a><a href="#work-items">Work items</a><a href="#evidence">Evidence</a><a href="#release">Release</a>
       </nav>
 
       <section class="metrics" aria-label="Game health summary">
@@ -33,6 +33,68 @@
         <article><span>Playtests</span><strong>{{ data.playtests.total }}</strong><small>Recorded sessions</small></article>
         <article><span>Release readiness</span><strong>{{ data.releaseReadiness.readinessPercentage }}%</strong><small>{{ data.releaseReadiness.completedItems }} of {{ data.releaseReadiness.totalItems }} complete</small></article>
       </section>
+
+      @if (data.launchPlan; as launchPlan) {
+        <section class="launch-plan-card" id="launch-plan">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Validation campaign</p>
+              <h2>Launch plan</h2>
+              <p>Track whether this game has the Steam, demo, festival, and creator plan needed before the big push.</p>
+            </div>
+            <div class="launch-score">
+              <strong>{{ launchPlan.readinessPercentage }}%</strong>
+              <button class="quiet-button" type="button" (click)="openLaunchPlan()">Open launch plan</button>
+            </div>
+          </div>
+
+          <div class="progress" role="progressbar" [attr.aria-valuenow]="launchPlan.readinessPercentage" aria-valuemin="0" aria-valuemax="100">
+            <span [style.width.%]="launchPlan.readinessPercentage"></span>
+          </div>
+
+          <div class="launch-plan-grid">
+            <article>
+              <h3>Target dates</h3>
+              <dl>
+                <div><dt>Demo</dt><dd>{{ launchPlan.targetDemoDate ? formatDate(launchPlan.targetDemoDate) : 'No date' }}</dd></div>
+                <div><dt>Next Fest</dt><dd>{{ launchPlan.targetNextFestDate ? formatDate(launchPlan.targetNextFestDate) : 'No date' }}</dd></div>
+                <div><dt>Launch</dt><dd>{{ launchPlan.targetLaunchDate ? formatDate(launchPlan.targetLaunchDate) : 'No date' }}</dd></div>
+              </dl>
+            </article>
+
+            <article>
+              <h3>Campaign targets</h3>
+              <dl>
+                <div><dt>Creators</dt><dd>{{ launchPlan.contentCreatorOutreachTarget }}</dd></div>
+                <div><dt>Festivals</dt><dd>{{ launchPlan.festivalSubmissionTarget }}</dd></div>
+              </dl>
+            </article>
+
+            <article>
+              <h3>Core links</h3>
+              <div class="record-links">
+                @if (launchPlan.itchPageUrl) { <a [href]="launchPlan.itchPageUrl" target="_blank" rel="noreferrer">itch.io</a> } @else { <span>itch.io not set</span> }
+                @if (launchPlan.steamPageUrl) { <a [href]="launchPlan.steamPageUrl" target="_blank" rel="noreferrer">Steam</a> } @else { <span>Steam not set</span> }
+                @if (launchPlan.demoUrl) { <a [href]="launchPlan.demoUrl" target="_blank" rel="noreferrer">Demo</a> } @else { <span>Demo not set</span> }
+                @if (launchPlan.trailerUrl) { <a [href]="launchPlan.trailerUrl" target="_blank" rel="noreferrer">Trailer</a> } @else { <span>Trailer not set</span> }
+              </div>
+            </article>
+          </div>
+
+          @if (launchPlan.missingItems.length > 0) {
+            <div class="blockers launch-missing">
+              <h3>Launch plan gaps</h3>
+              <ul>
+                @for (item of launchPlan.missingItems; track item) {
+                  <li>{{ item }}</li>
+                }
+              </ul>
+            </div>
+          } @else {
+            <p class="ready-message">The core launch plan is ready. Turn it into scheduled marketing activities next.</p>
+          }
+        </section>
+      }
 
       <section class="work-section" id="work-items">
         <div class="section-heading">
@@ -73,7 +135,132 @@
         }
       </section>
 
-      <section class="detail-grid" id="evidence">
+      <section class="validation-lab" id="evidence">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Product validation</p>
+            <h2>Validation lab</h2>
+            <p>Connect prototype builds to measurable audience evidence before committing to production.</p>
+          </div>
+          @if (canManageEvidence()) {
+            <div class="action-group">
+              <button class="quiet-button" type="button" (click)="toggleEvidenceForm('prototype')">Add prototype</button>
+              <button class="quiet-button" type="button" (click)="toggleEvidenceForm('traction')">Record traction</button>
+              @if (canRecordDecision()) {
+                <button class="primary-button" type="button" (click)="toggleEvidenceForm('decision')">Record decision</button>
+              }
+            </div>
+          } @else {
+            <span class="role-note">Read-only access</span>
+          }
+        </div>
+
+        @if (evidenceError()) {
+          <div class="inline-error" role="alert">{{ evidenceError() }}</div>
+        }
+
+        @if (openEvidenceForm() === 'prototype') {
+          <form class="evidence-form" [formGroup]="prototypeForm" (ngSubmit)="createPrototype()">
+            <div class="form-intro wide"><h3>New prototype build</h3><p>Record a playable build and the places where people can find it.</p></div>
+            <label><span>Name</span><input type="text" formControlName="name" placeholder="Game jam build" /></label>
+            <label><span>Build version</span><input type="text" formControlName="buildVersion" placeholder="0.1.0" /></label>
+            <label class="wide"><span>itch.io URL</span><input type="url" formControlName="itchUrl" placeholder="https://yourstudio.itch.io/game" /></label>
+            <label><span>Playable URL</span><input type="url" formControlName="playableUrl" placeholder="https://..." /></label>
+            <label><span>Repository URL</span><input type="url" formControlName="repositoryUrl" placeholder="https://github.com/..." /></label>
+            @if (prototypeForm.controls.name.touched && prototypeForm.controls.name.invalid) {
+              <p class="form-error wide">Give the prototype a name.</p>
+            }
+            <div class="form-actions wide"><button class="quiet-button" type="button" (click)="toggleEvidenceForm('prototype')">Cancel</button><button class="primary-button" type="submit" [disabled]="savingPrototype()">{{ savingPrototype() ? 'Saving...' : 'Save prototype' }}</button></div>
+          </form>
+        }
+
+        @if (openEvidenceForm() === 'traction') {
+          <form class="evidence-form metrics-form" [formGroup]="tractionForm" (ngSubmit)="createTractionSnapshot()">
+            <div class="form-intro wide"><h3>New traction snapshot</h3><p>Capture a point-in-time reading from itch.io, Steam, social media, or an event.</p></div>
+            <label><span>Source</span><select formControlName="source">@for (source of tractionSources; track source) { <option [value]="source">{{ formatLabel(source) }}</option> }</select></label>
+            <label><span>Prototype</span><select formControlName="prototypeId"><option value="">Game-level snapshot</option>@for (prototype of prototypes(); track prototype.id) { <option [value]="prototype.id">{{ prototype.name }}{{ prototype.buildVersion ? ' - ' + prototype.buildVersion : '' }}</option> }</select></label>
+            <label><span>Views</span><input type="number" min="0" formControlName="views" /></label>
+            <label><span>Downloads</span><input type="number" min="0" formControlName="downloads" /></label>
+            <label><span>Plays</span><input type="number" min="0" formControlName="plays" /></label>
+            <label><span>Wishlists</span><input type="number" min="0" formControlName="wishlists" /></label>
+            <label><span>Ratings</span><input type="number" min="0" formControlName="ratingsCount" /></label>
+            <label><span>Average rating</span><input type="number" min="0" max="5" step="0.1" formControlName="averageRating" /></label>
+            <label><span>Comments</span><input type="number" min="0" formControlName="commentsCount" /></label>
+            <label><span>Followers gained</span><input type="number" min="0" formControlName="followersGained" /></label>
+            <label><span>Revenue (cents)</span><input type="number" min="0" formControlName="revenueCents" /></label>
+            <label><span>Captured at</span><input type="datetime-local" formControlName="capturedAt" /></label>
+            <div class="form-actions wide"><button class="quiet-button" type="button" (click)="toggleEvidenceForm('traction')">Cancel</button><button class="primary-button" type="submit" [disabled]="savingTraction()">{{ savingTraction() ? 'Saving...' : 'Save snapshot' }}</button></div>
+          </form>
+        }
+
+        @if (openEvidenceForm() === 'decision') {
+          <form class="evidence-form" [formGroup]="decisionForm" (ngSubmit)="createValidationDecision()">
+            <div class="form-intro wide"><h3>Record validation decision</h3><p>This action updates the game’s lifecycle stage and validation status.</p></div>
+            <label class="wide"><span>Decision</span><select formControlName="decision">@for (decision of decisionTypes; track decision) { <option [value]="decision">{{ formatLabel(decision) }}</option> }</select></label>
+            <label class="wide"><span>Reason</span><textarea rows="4" formControlName="reason" placeholder="What evidence supports this decision?"></textarea></label>
+            @if (decisionForm.controls.reason.touched && decisionForm.controls.reason.invalid) {
+              <p class="form-error wide">Explain the evidence behind the decision.</p>
+            }
+            <div class="form-actions wide"><button class="quiet-button" type="button" (click)="toggleEvidenceForm('decision')">Cancel</button><button class="primary-button" type="submit" [disabled]="savingDecision()">{{ savingDecision() ? 'Saving...' : 'Record decision' }}</button></div>
+          </form>
+        }
+
+        <div class="evidence-columns">
+          <article>
+            <div class="card-heading"><h3>Prototype builds</h3><span>{{ prototypes().length }}</span></div>
+            @if (prototypes().length === 0) {
+              <p class="muted">No prototype builds recorded yet.</p>
+            } @else {
+              <div class="record-list">
+                @for (prototype of prototypes(); track prototype.id) {
+                  <div class="record-item">
+                    <div><strong>{{ prototype.name }}</strong><small>{{ prototype.buildVersion || 'No version' }}</small></div>
+                    <div class="record-links">
+                      @if (prototype.itchUrl) { <a [href]="prototype.itchUrl" target="_blank" rel="noreferrer">itch.io</a> }
+                      @if (prototype.playableUrl) { <a [href]="prototype.playableUrl" target="_blank" rel="noreferrer">Play</a> }
+                      @if (prototype.repositoryUrl) { <a [href]="prototype.repositoryUrl" target="_blank" rel="noreferrer">Code</a> }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </article>
+
+          <article>
+            <div class="card-heading"><h3>Traction history</h3><span>{{ tractionSnapshots().length }}</span></div>
+            @if (tractionSnapshots().length === 0) {
+              <p class="muted">No traction snapshots recorded yet.</p>
+            } @else {
+              <div class="record-list">
+                @for (snapshot of tractionSnapshots(); track snapshot.id) {
+                  <div class="record-item traction-record">
+                    <div><strong>{{ formatLabel(snapshot.source) }}</strong><small>{{ snapshot.capturedAt | date:'mediumDate' }}</small></div>
+                    <div class="mini-metrics"><span>{{ snapshot.views }} views</span><span>{{ snapshot.downloads }} downloads</span><span>{{ snapshot.wishlists }} wishlists</span></div>
+                  </div>
+                }
+              </div>
+            }
+          </article>
+
+          <article>
+            <div class="card-heading"><h3>Decision history</h3><span>{{ validationDecisions().length }}</span></div>
+            @if (validationDecisions().length === 0) {
+              <p class="muted">No validation decisions recorded yet.</p>
+            } @else {
+              <div class="record-list">
+                @for (decision of validationDecisions(); track decision.id) {
+                  <div class="record-item decision-record">
+                    <div><strong>{{ formatLabel(decision.decision) }}</strong><small>{{ decision.decidedAt | date:'mediumDate' }}</small></div>
+                    <p>{{ decision.reason }}</p>
+                  </div>
+                }
+              </div>
+            }
+          </article>
+        </div>
+      </section>
+
+      <section class="detail-grid">
         <article><div class="card-heading"><h2>Validation</h2><span>{{ formatLabel(data.game.validationStatus) }}</span></div>@if (data.validation) { <strong>{{ formatLabel(data.validation.latestDecision) }}</strong><p>{{ data.validation.reason }}</p> } @else { <p>No validation decision recorded yet.</p> }</article>
         <article><div class="card-heading"><h2>Traction</h2><span>{{ formatLabel(data.traction?.latestSource ?? null) }}</span></div>@if (data.traction) { <dl><div><dt>Views</dt><dd>{{ data.traction.views }}</dd></div><div><dt>Downloads</dt><dd>{{ data.traction.downloads }}</dd></div><div><dt>Wishlists</dt><dd>{{ data.traction.wishlists }}</dd></div><div><dt>Rating</dt><dd>{{ data.traction.averageRating }}</dd></div></dl> } @else { <p>No traction snapshot recorded yet.</p> }</article>
         <article><div class="card-heading"><h2>Marketing</h2><span>{{ data.marketing.upcoming }} upcoming</span></div><p>{{ data.marketing.total }} activities recorded.</p>@if (data.marketing.nextTitle) { <strong>{{ data.marketing.nextTitle }}</strong><p>{{ data.marketing.nextChannel }}</p> }</article>

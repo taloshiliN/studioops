@@ -3,6 +3,8 @@ package org.fromdesertdev.studioops.dashboard;
 import org.fromdesertdev.studioops.authorization.PermissionService;
 import org.fromdesertdev.studioops.game.Game;
 import org.fromdesertdev.studioops.game.GameRepository;
+import org.fromdesertdev.studioops.launchplan.LaunchPlanResponse;
+import org.fromdesertdev.studioops.launchplan.LaunchPlanService;
 import org.fromdesertdev.studioops.marketing.MarketingActivity;
 import org.fromdesertdev.studioops.marketing.MarketingActivityRepository;
 import org.fromdesertdev.studioops.milestone.Milestone;
@@ -37,6 +39,7 @@ public class GameDashboardService {
     private final MilestoneRepository milestoneRepository;
     private final PlaytestRepository playtestRepository;
     private final MarketingActivityRepository marketingActivityRepository;
+    private final LaunchPlanService launchPlanService;
     private final ReleaseChecklistService releaseChecklistService;
     private final WorkItemRepository workItemRepository;
     private final PermissionService permissionService;
@@ -49,6 +52,7 @@ public class GameDashboardService {
             WorkItemRepository workItemRepository,
             PlaytestRepository playtestRepository,
             MarketingActivityRepository marketingActivityRepository,
+            LaunchPlanService launchPlanService,
             ReleaseChecklistService releaseChecklistService,
             PermissionService permissionService
     ) {
@@ -58,6 +62,7 @@ public class GameDashboardService {
         this.milestoneRepository = milestoneRepository;
         this.playtestRepository = playtestRepository;
         this.marketingActivityRepository = marketingActivityRepository;
+        this.launchPlanService = launchPlanService;
         this.releaseChecklistService = releaseChecklistService;
         this.workItemRepository = workItemRepository;
         this.permissionService = permissionService;
@@ -78,6 +83,7 @@ public class GameDashboardService {
                 workItemSummary(gameId),
                 playtestSummary(gameId),
                 marketingSummary(gameId),
+                launchPlanSummary(gameId),
                 releaseReadinessSummary(gameId)
         );
     }
@@ -222,6 +228,24 @@ public class GameDashboardService {
                 readiness.readinessPercentage(),
                 readiness.blocked(),
                 readiness.blockingItems()
+        );
+    }
+
+    private GameDashboardResponse.LaunchPlanSummary launchPlanSummary(Long gameId) {
+        LaunchPlanResponse launchPlan = launchPlanService.findByGame(gameId);
+
+        return new GameDashboardResponse.LaunchPlanSummary(
+                launchPlan.itchPageUrl(),
+                launchPlan.steamPageUrl(),
+                launchPlan.demoUrl(),
+                launchPlan.trailerUrl(),
+                launchPlan.targetDemoDate(),
+                launchPlan.targetNextFestDate(),
+                launchPlan.targetLaunchDate(),
+                launchPlan.contentCreatorOutreachTarget(),
+                launchPlan.festivalSubmissionTarget(),
+                launchPlan.readinessPercentage(),
+                launchPlan.missingItems()
         );
     }
 }

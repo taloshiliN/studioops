@@ -59,6 +59,20 @@ export interface GameDashboard {
     nextScheduledFor: string | null;
   };
 
+  launchPlan: {
+    itchPageUrl: string | null;
+    steamPageUrl: string | null;
+    demoUrl: string | null;
+    trailerUrl: string | null;
+    targetDemoDate: string | null;
+    targetNextFestDate: string | null;
+    targetLaunchDate: string | null;
+    contentCreatorOutreachTarget: number;
+    festivalSubmissionTarget: number;
+    readinessPercentage: number;
+    missingItems: string[];
+  };
+
   releaseReadiness: {
     totalItems: number;
     completedItems: number;

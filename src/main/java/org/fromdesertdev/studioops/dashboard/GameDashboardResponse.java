@@ -19,6 +19,7 @@ public record GameDashboardResponse(
         WorkItemSummary workItems,
         PlaytestSummary playtests,
         MarketingSummary marketing,
+        LaunchPlanSummary launchPlan,
         ReleaseReadinessSummary releaseReadiness
 ) {
     public record GameSummary(
@@ -86,6 +87,21 @@ public record GameDashboardResponse(
             String nextChannel,
             String nextTitle,
             LocalDateTime nextScheduledFor
+    ) {
+    }
+
+    public record LaunchPlanSummary(
+            String itchPageUrl,
+            String steamPageUrl,
+            String demoUrl,
+            String trailerUrl,
+            LocalDate targetDemoDate,
+            LocalDate targetNextFestDate,
+            LocalDate targetLaunchDate,
+            int contentCreatorOutreachTarget,
+            int festivalSubmissionTarget,
+            int readinessPercentage,
+            List<String> missingItems
     ) {
     }
 

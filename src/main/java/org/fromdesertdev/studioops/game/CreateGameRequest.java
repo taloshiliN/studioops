@@ -9,6 +9,7 @@ public record CreateGameRequest(
         @NotBlank @Size(max = 160) String title,
         String shortPitch,
         @Size(max = 80) String genre,
-        @Size(max = 240) String targetPlatforms
+        @Size(max = 240) String targetPlatforms,
+        @Size(max = 80) String fontFamily
 ) {
 }

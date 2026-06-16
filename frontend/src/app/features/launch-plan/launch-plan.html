@@ -1,0 +1,215 @@
+<section class="workspace">
+  @if (loadingWorkspace()) {
+    <div class="state-panel">Loading launch planning...</div>
+  } @else if (studios().length === 0) {
+    <div class="empty-state">
+      <p class="eyebrow">No studio yet</p>
+      <h2>Create a studio before planning a launch.</h2>
+    </div>
+  } @else {
+    <div class="workspace-heading">
+      <div>
+        <p class="eyebrow">Validation campaign</p>
+        <h2>{{ selectedGame()?.title || 'Choose a game' }}</h2>
+        <p>Plan the path from itch prototype to Steam demo, festivals, creators, and launch.</p>
+      </div>
+
+      <div class="selectors">
+        <label>
+          <span>Studio</span>
+          <select [value]="selectedStudioId()" (change)="changeStudio($event)">
+            @for (studio of studios(); track studio.id) {
+              <option [value]="studio.id">{{ studio.name }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          <span>Game</span>
+          <select [value]="selectedGameId()" (change)="changeGame($event)" [disabled]="games().length === 0">
+            @for (game of games(); track game.id) {
+              <option [value]="game.id">{{ game.title }}</option>
+            }
+          </select>
+        </label>
+      </div>
+    </div>
+
+    @if (selectedGame(); as game) {
+      <div class="game-status">
+        <div>
+          <span>Stage</span>
+          <strong>{{ formatLabel(game.currentStage) }}</strong>
+        </div>
+        <div>
+          <span>Validation</span>
+          <strong>{{ formatLabel(game.validationStatus) }}</strong>
+        </div>
+        <button class="quiet-button" type="button" (click)="openGame()">Open game dashboard</button>
+      </div>
+    }
+
+    @if (loadingPlan()) {
+      <div class="state-panel">Loading launch plan...</div>
+    } @else if (games().length === 0) {
+      <div class="empty-state">
+        <h3>No games found</h3>
+        <p>Create a game before building a launch plan.</p>
+      </div>
+    } @else {
+      <div class="metrics" aria-label="Launch planning summary">
+        <article>
+          <span>Plan readiness</span>
+          <strong>{{ readiness() }}%</strong>
+          <small>Based on core launch planning checks</small>
+        </article>
+        <article [class.attention]="missingItems().length > 0">
+          <span>Missing items</span>
+          <strong>{{ missingItems().length }}</strong>
+          <small>Things to prepare before the push</small>
+        </article>
+        <article>
+          <span>Creator target</span>
+          <strong>{{ launchPlan()?.contentCreatorOutreachTarget || 300 }}</strong>
+          <small>Outreach emails to prepare</small>
+        </article>
+        <article>
+          <span>Festival target</span>
+          <strong>{{ launchPlan()?.festivalSubmissionTarget || 5 }}</strong>
+          <small>Festivals or showcases to submit to</small>
+        </article>
+      </div>
+
+      <div class="launch-layout">
+        <form class="plan-form" [formGroup]="launchPlanForm" (ngSubmit)="saveLaunchPlan()">
+          <div class="form-intro wide">
+            <div>
+              <p class="eyebrow">Launch spine</p>
+              <h3>Core campaign details</h3>
+            </div>
+            <p>Keep this high-level. Specific posts, emails, and events still belong in Marketing.</p>
+          </div>
+
+          <label>
+            <span>itch.io prototype URL</span>
+            <input type="url" formControlName="itchPageUrl" placeholder="https://fromdesertdev.itch.io/game" />
+          </label>
+
+          <label>
+            <span>Steam page URL</span>
+            <input type="url" formControlName="steamPageUrl" placeholder="https://store.steampowered.com/app/..." />
+          </label>
+
+          <label>
+            <span>Demo URL</span>
+            <input type="url" formControlName="demoUrl" placeholder="Steam demo or itch demo link" />
+          </label>
+
+          <label>
+            <span>Trailer URL</span>
+            <input type="url" formControlName="trailerUrl" placeholder="YouTube trailer link" />
+          </label>
+
+          <label>
+            <span>Demo target date</span>
+            <input type="date" formControlName="targetDemoDate" />
+          </label>
+
+          <label>
+            <span>Next Fest target date</span>
+            <input type="date" formControlName="targetNextFestDate" />
+          </label>
+
+          <label>
+            <span>Launch target date</span>
+            <input type="date" formControlName="targetLaunchDate" />
+          </label>
+
+          <label>
+            <span>Creator outreach target</span>
+            <input type="number" min="0" formControlName="contentCreatorOutreachTarget" />
+          </label>
+
+          <label>
+            <span>Festival submission target</span>
+            <input type="number" min="0" formControlName="festivalSubmissionTarget" />
+          </label>
+
+          <label class="wide">
+            <span>Notes</span>
+            <textarea rows="5" formControlName="notes" placeholder="Genre references, benchmark goals, demo strategy, pricing thoughts..."></textarea>
+          </label>
+
+          @if (managementMessage()) {
+            <p class="permission-note wide">{{ managementMessage() }}</p>
+          }
+
+          @if (actionError()) {
+            <p class="form-error wide" role="alert">{{ actionError() }}</p>
+          }
+
+          @if (successMessage()) {
+            <p class="form-success wide" role="status">{{ successMessage() }}</p>
+          }
+
+          <div class="form-actions wide">
+            <button class="primary-button" type="submit" [disabled]="!canManageLaunchPlan() || savingPlan()">
+              {{ savingPlan() ? 'Saving...' : 'Save launch plan' }}
+            </button>
+          </div>
+        </form>
+
+        <aside class="plan-sidebar">
+          <section>
+            <p class="eyebrow">Planning checklist</p>
+            <h3>What is missing?</h3>
+
+            @if (missingItems().length === 0) {
+              <p class="good-news">The core launch plan is ready. Next step: turn it into concrete marketing activities.</p>
+            } @else {
+              <ul>
+                @for (item of missingItems(); track item) {
+                  <li>{{ item }}</li>
+                }
+              </ul>
+            }
+          </section>
+
+          <section>
+            <p class="eyebrow">Transcript logic</p>
+            <h3>Why this matters</h3>
+            <div class="playbook">
+              <article>
+                <strong>1. Validate</strong>
+                <span>Put the prototype somewhere public and measure reaction.</span>
+              </article>
+              <article>
+                <strong>2. Prepare Steam</strong>
+                <span>Steam page, trailer, and demo should happen before the big push.</span>
+              </article>
+              <article>
+                <strong>3. Build visibility</strong>
+                <span>Festivals and content creators need lead time.</span>
+              </article>
+              <article>
+                <strong>4. Launch cleanly</strong>
+                <span>Use the release checklist once the campaign path is clear.</span>
+              </article>
+            </div>
+          </section>
+
+          @if (launchPlan()?.updatedAt) {
+            <section class="timestamp">
+              <span>Last updated</span>
+              <strong>{{ launchPlan()?.updatedAt | date:'medium' }}</strong>
+            </section>
+          }
+        </aside>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="state-panel error" role="alert">{{ errorMessage() }}</div>
+    }
+  }
+</section>

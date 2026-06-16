@@ -1,0 +1,2 @@
+ALTER TABLE games
+    ADD COLUMN font_family VARCHAR(80) NOT NULL DEFAULT 'Inter';

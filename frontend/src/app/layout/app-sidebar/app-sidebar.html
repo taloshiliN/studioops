@@ -1,0 +1,29 @@
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <a class="brand" routerLink="/dashboard" (click)="closeMenu()">
+      <span>SO</span>
+      <strong>StudioOps</strong>
+    </a>
+
+    <button
+      class="menu-toggle"
+      type="button"
+      [attr.aria-expanded]="menuOpen()"
+      aria-controls="primary-navigation"
+      (click)="toggleMenu()"
+    >
+      Menu
+    </button>
+  </div>
+
+  <nav id="primary-navigation" aria-label="Primary navigation" [class.open]="menuOpen()">
+    <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">Overview</a>
+    <a routerLink="/games" routerLinkActive="active" (click)="closeMenu()">Games</a>
+    <a routerLink="/launch-plan" routerLinkActive="active" (click)="closeMenu()">Launch plan</a>
+    <a routerLink="/work-items" routerLinkActive="active" (click)="closeMenu()">Work items</a>
+    <a routerLink="/marketing" routerLinkActive="active" (click)="closeMenu()">Marketing</a>
+    <a routerLink="/release-readiness" routerLinkActive="active" (click)="closeMenu()">Release readiness</a>
+  </nav>
+
+  <button class="sign-out" type="button" (click)="signOut()">Sign out</button>
+</aside>

@@ -1,0 +1,21 @@
+<div class="shell">
+  <app-sidebar />
+
+  <main>
+    <header class="topbar">
+      <div>
+        <small>{{ pageContext() }}</small>
+        <h1>{{ pageTitle() }}</h1>
+      </div>
+
+      @if (user(); as currentUser) {
+        <div class="user-summary">
+          <span>{{ currentUser.name.charAt(0).toUpperCase() }}</span>
+          <div><strong>{{ currentUser.name }}</strong><small>{{ currentUser.email }}</small></div>
+        </div>
+      }
+    </header>
+
+    <router-outlet />
+  </main>
+</div>

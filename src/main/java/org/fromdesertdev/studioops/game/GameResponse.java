@@ -11,6 +11,7 @@ public record GameResponse(
         GameStage currentStage,
         ValidationStatus validationStatus,
         String targetPlatforms,
+        String fontFamily,
         LocalDateTime createdAt
 ) {
     public static GameResponse from(Game game) {
@@ -23,6 +24,7 @@ public record GameResponse(
                 game.getCurrentStage(),
                 game.getValidationStatus(),
                 game.getTargetPlatforms(),
+                game.getFontFamily(),
                 game.getCreatedAt()
         );
     }
