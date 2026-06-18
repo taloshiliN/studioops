@@ -8,4 +8,6 @@ public interface TractionSnapshotRepository extends JpaRepository<TractionSnapsh
     List<TractionSnapshot> findByGame_IdOrderByCapturedAtAsc(Long gameId);
     List<TractionSnapshot> findByGame_IdOrderByCapturedAtDesc(Long gameId);
     List<TractionSnapshot> findByPrototype_IdOrderByCapturedAtAsc(Long prototypeId);
+
+    void deleteByGame_Id(Long gameId);
 }

@@ -24,4 +24,8 @@ export class GameService {
   getDashboard(gameId: number): Observable<GameDashboard> {
     return this.http.get<GameDashboard>(`/api/games/${gameId}/dashboard`);
   }
+
+  delete(gameId: number): Observable<void> {
+    return this.http.delete<void>(`/api/games/${gameId}`);
+  }
 }

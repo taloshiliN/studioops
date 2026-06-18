@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface PrototypeRepository extends JpaRepository<Prototype, Long> {
     List<Prototype> findByGame_Id(Long gameId);
+
+    void deleteByGame_Id(Long gameId);
 }

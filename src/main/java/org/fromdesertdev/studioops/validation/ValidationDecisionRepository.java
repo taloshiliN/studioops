@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface ValidationDecisionRepository extends JpaRepository<ValidationDecision, Long> {
     List<ValidationDecision> findByGame_IdOrderByDecidedAtDesc(Long gameId);
+
+    void deleteByGame_Id(Long gameId);
 }

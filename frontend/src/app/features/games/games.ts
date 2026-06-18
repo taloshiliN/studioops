@@ -40,9 +40,25 @@ export class GamesPage implements OnInit {
   readonly loadingGames = signal(false);
   readonly savingGame = signal(false);
   readonly showCreateForm = signal(false);
+  readonly deletingGameIds = signal<Set<number>>(new Set());
   readonly errorMessage = signal('');
   readonly actionError = signal('');
-  readonly selectedStudio = computed(() => this.studios().find(studio => studio.id === this.selectedStudioId()) ?? null);
+
+  readonly selectedStudio = computed(() =>
+    this.studios().find(studio => studio.id === this.selectedStudioId()) ?? null
+  );
+
+  readonly validationCount = computed(() =>
+    this.games().filter(game =>
+      ['GAME_JAM', 'PROTOTYPE', 'VALIDATION'].includes(game.currentStage)
+    ).length
+  );
+
+  readonly productionCount = computed(() =>
+    this.games().filter(game =>
+      ['PLANNING', 'PRODUCTION', 'PLAYTESTING'].includes(game.currentStage)
+    ).length
+  );
 
   readonly createForm = new FormGroup({
     title: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(160)] }),
@@ -121,6 +137,30 @@ export class GamesPage implements OnInit {
     void this.router.navigate(['/games', gameId], { fragment: 'summary' });
   }
 
+  deleteGame(game: Game): void {
+    const confirmed = window.confirm(
+      `Delete "${game.title}" and all of its production records? This cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.setDeleting(game.id, true);
+    this.actionError.set('');
+
+    this.gameService.delete(game.id)
+      .pipe(finalize(() => this.setDeleting(game.id, false)))
+      .subscribe({
+        next: () => this.games.update(games => games.filter(existingGame => existingGame.id !== game.id)),
+        error: error => this.handleDeleteError(error)
+      });
+  }
+
+  isDeleting(gameId: number): boolean {
+    return this.deletingGameIds().has(gameId);
+  }
+
   formatLabel(value: string): string {
     return value.toLowerCase().split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   }
@@ -152,6 +192,20 @@ export class GamesPage implements OnInit {
     return trimmed.length > 0 ? trimmed : null;
   }
 
+  private setDeleting(gameId: number, deleting: boolean): void {
+    this.deletingGameIds.update(ids => {
+      const nextIds = new Set(ids);
+
+      if (deleting) {
+        nextIds.add(gameId);
+      } else {
+        nextIds.delete(gameId);
+      }
+
+      return nextIds;
+    });
+  }
+
   private handleCreateError(error: HttpErrorResponse): void {
     if (error.status === 401) {
       this.authService.logout();
@@ -165,6 +219,26 @@ export class GamesPage implements OnInit {
     }
 
     this.actionError.set('Unable to create this game right now.');
+  }
+
+  private handleDeleteError(error: HttpErrorResponse): void {
+    if (error.status === 401) {
+      this.authService.logout();
+      void this.router.navigate(['/login']);
+      return;
+    }
+
+    if (error.status === 403) {
+      this.actionError.set('Only studio Owners or Producers can delete games.');
+      return;
+    }
+
+    if (error.status === 404) {
+      this.actionError.set('That game was already deleted or no longer exists.');
+      return;
+    }
+
+    this.actionError.set('Unable to delete this game right now.');
   }
 
   private handleError(error: HttpErrorResponse, message: string): void {

@@ -3,6 +3,7 @@ import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/ro
 import { filter, startWith } from 'rxjs';
 
 import { AuthService } from '../../core/auth.service';
+import { ThemeService } from '../../core/theme.service';
 import { AppSidebar } from '../app-sidebar/app-sidebar';
 
 @Component({
@@ -13,6 +14,7 @@ import { AppSidebar } from '../app-sidebar/app-sidebar';
 })
 export class AppShell implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly themeService = inject(ThemeService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -21,6 +23,8 @@ export class AppShell implements OnInit {
   readonly pageContext = signal('Studio operating view');
 
   ngOnInit(): void {
+    this.themeService.initialize();
+
     this.authService.loadCurrentUser().subscribe({
       error: () => {
         this.authService.logout();

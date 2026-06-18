@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface MilestoneRepository extends JpaRepository<Milestone, Long> {
     List<Milestone> findByGame_IdOrderByDueDateAsc(Long gameId);
+
+    void deleteByGame_Id(Long gameId);
 }

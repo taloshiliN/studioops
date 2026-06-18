@@ -12,7 +12,7 @@ import { StudioService } from '../../core/studio.service';
 @Component({
   selector: 'app-overview',
   templateUrl: './overview.html',
-  styleUrl: '../../layout/workspace-page.scss'
+  styleUrl: './overview.scss'
 })
 export class OverviewPage implements OnInit {
   private readonly authService = inject(AuthService);
@@ -30,11 +30,17 @@ export class OverviewPage implements OnInit {
   readonly selectedStudio = computed(() =>
     this.studios().find(studio => studio.id === this.selectedStudioId()) ?? null
   );
+
   readonly validationCount = computed(() =>
-    this.games().filter(game => game.currentStage === 'VALIDATION').length
+    this.games().filter(game =>
+      ['GAME_JAM', 'PROTOTYPE', 'VALIDATION'].includes(game.currentStage)
+    ).length
   );
+
   readonly productionCount = computed(() =>
-    this.games().filter(game => game.currentStage === 'PRODUCTION').length
+    this.games().filter(game =>
+      ['PLANNING', 'PRODUCTION', 'PLAYTESTING'].includes(game.currentStage)
+    ).length
   );
 
   ngOnInit(): void {
@@ -57,8 +63,16 @@ export class OverviewPage implements OnInit {
     void this.router.navigate(['/games', gameId], { fragment: 'summary' });
   }
 
+  createGame(): void {
+    void this.router.navigate(['/games']);
+  }
+
   formatLabel(value: string): string {
     return value.toLowerCase().split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  }
+
+  displayValue(value: string | null): string {
+    return value?.trim() || 'Not set';
   }
 
   private loadStudio(studioId: number): void {
@@ -80,6 +94,7 @@ export class OverviewPage implements OnInit {
       void this.router.navigate(['/login']);
       return;
     }
+
     this.errorMessage.set(message);
   }
 }

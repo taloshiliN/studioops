@@ -1,0 +1,41 @@
+<section class="workspace">
+  <div class="workspace-heading">
+    <div>
+      <p class="eyebrow">Preferences</p>
+      <h2>Settings</h2>
+      <p>Choose how StudioOps feels while you work.</p>
+    </div>
+  </div>
+
+  <section class="settings-panel" aria-labelledby="theme-heading">
+    <div>
+      <p class="eyebrow">Appearance</p>
+      <h3 id="theme-heading">Theme</h3>
+      <p>Theme selection is saved in this browser.</p>
+    </div>
+
+    <div class="theme-grid">
+      @for (theme of themes; track theme.id) {
+        <button
+          class="theme-card"
+          type="button"
+          [class.selected]="selectedTheme() === theme.id"
+          (click)="selectTheme(theme.id)"
+        >
+          <span class="theme-preview" [class]="theme.id">
+            <i></i>
+            <i></i>
+            <i></i>
+          </span>
+
+          <strong>{{ theme.name }}</strong>
+          <small>{{ theme.description }}</small>
+
+          @if (selectedTheme() === theme.id) {
+            <span class="selected-label">Selected</span>
+          }
+        </button>
+      }
+    </div>
+  </section>
+</section>

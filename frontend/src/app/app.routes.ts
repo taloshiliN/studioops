@@ -59,6 +59,12 @@ export const routes: Routes = [
             .then(m => m.ReleaseReadinessPage)
       },
       {
+        path: 'settings',
+        data: { title: 'Settings', context: 'Workspace preferences' },
+        loadComponent: () =>
+          import('./features/settings/settings').then(m => m.SettingsPage)
+      },
+      {
         path: '',
         pathMatch: 'full',
         redirectTo: 'dashboard'

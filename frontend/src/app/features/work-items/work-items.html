@@ -1,17 +1,82 @@
-<section class="workspace">
-  @if (loadingWorkspace()) { <div class="state-panel">Loading work items...</div> }
-  @else if (studios().length === 0) { <div class="empty-state"><p class="eyebrow">No studio yet</p><h2>Create a studio before planning production work.</h2></div> }
-  @else {
-    <div class="workspace-heading">
-      <div><p class="eyebrow">Production planning</p><h2>{{ selectedStudio()?.name }}</h2><p>Choose a game to plan, assign, and update its production tasks.</p></div>
-      <label class="studio-picker"><span>Studio</span><select [value]="selectedStudioId()" (change)="changeStudio($event)">@for (studio of studios(); track studio.id) { <option [value]="studio.id">{{ studio.name }}</option> }</select></label>
+<section class="work-page">
+  @if (loadingWorkspace()) {
+    <div class="state-panel">Loading work items...</div>
+  } @else if (studios().length === 0) {
+    <div class="empty-state">
+      <p class="eyebrow">No studio yet</p>
+      <h2>Create a studio before planning production work.</h2>
     </div>
-    @if (errorMessage()) { <div class="state-panel error" role="alert">{{ errorMessage() }}</div> }
-    @else if (loadingGames()) { <div class="state-panel">Loading games...</div> }
-    @else if (games().length === 0) { <div class="empty-state"><h3>No games found</h3><p>Create a game before adding production tasks.</p></div> }
-    @else {
-      <div class="section-heading"><div><p class="eyebrow">Select a game</p><h3>Work-item boards</h3></div><span>{{ games().length }} total</span></div>
-      <div class="game-grid">@for (game of games(); track game.id) { <button class="game-card" type="button" (click)="openWorkItems(game.id)"><div class="card-topline"><span class="stage">{{ formatLabel(game.currentStage) }}</span><span class="validation">{{ formatLabel(game.validationStatus) }}</span></div><div><h4>{{ game.title }}</h4><p>{{ game.shortPitch }}</p></div><dl><div><dt>Genre</dt><dd>{{ game.genre }}</dd></div><div><dt>Platforms</dt><dd>{{ game.targetPlatforms }}</dd></div></dl><span class="card-action">Manage work items <span aria-hidden="true">&rarr;</span></span></button> }</div>
+  } @else {
+    <div class="work-toolbar">
+      <div>
+        <p class="eyebrow">Production planning</p>
+        <h2>{{ selectedStudio()?.name }}</h2>
+      </div>
+
+      <label class="studio-picker">
+        <span>Studio</span>
+        <select [value]="selectedStudioId()" (change)="changeStudio($event)">
+          @for (studio of studios(); track studio.id) {
+            <option [value]="studio.id">{{ studio.name }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <section class="summary-panel" aria-label="Work item workspace summary">
+      <div class="stat-strip">
+        <article>
+          <span>Total Games</span>
+          <strong>{{ games().length }}</strong>
+        </article>
+        <article class="dark">
+          <span>In Validation</span>
+          <strong>{{ validationCount() }}</strong>
+        </article>
+        <article>
+          <span>In Production</span>
+          <strong>{{ productionCount() }}</strong>
+        </article>
+      </div>
+    </section>
+
+    @if (errorMessage()) {
+      <div class="state-panel error" role="alert">{{ errorMessage() }}</div>
+    } @else if (loadingGames()) {
+      <div class="state-panel">Loading games...</div>
+    } @else if (games().length === 0) {
+      <div class="empty-state">
+        <h3>No games found</h3>
+        <p>Create a game before adding production tasks.</p>
+      </div>
+    } @else {
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Select a game</p>
+          <h3>Work-item boards</h3>
+        </div>
+        <span>{{ games().length }} total</span>
+      </div>
+
+      <div class="game-grid">
+        @for (game of games(); track game.id) {
+          <button class="game-card" type="button" (click)="openWorkItems(game.id)">
+            <div class="card-topline">
+              <span class="stage">{{ formatLabel(game.currentStage) }}</span>
+              <span class="validation">{{ formatLabel(game.validationStatus) }}</span>
+            </div>
+            <div>
+              <h4>{{ game.title }}</h4>
+              <p>{{ displayValue(game.shortPitch) }}</p>
+            </div>
+            <dl>
+              <div><dt>Genre</dt><dd>{{ displayValue(game.genre) }}</dd></div>
+              <div><dt>Platforms</dt><dd>{{ displayValue(game.targetPlatforms) }}</dd></div>
+            </dl>
+            <span class="card-action">Manage Work Items</span>
+          </button>
+        }
+      </div>
     }
   }
 </section>

@@ -1,37 +1,83 @@
-<section class="workspace">
+<section class="overview-page">
   @if (loadingWorkspace()) {
     <div class="state-panel">Loading your workspace...</div>
   } @else if (errorMessage() && studios().length === 0) {
     <div class="state-panel error" role="alert">{{ errorMessage() }}</div>
   } @else if (studios().length === 0) {
-    <div class="empty-state"><p class="eyebrow">No studio yet</p><h2>Create your first studio to begin.</h2><p>Your games, validation evidence, production work, and releases will live inside a studio.</p></div>
+    <div class="empty-state">
+      <p class="eyebrow">No studio yet</p>
+      <h2>Create your first studio to begin.</h2>
+      <p>Your games, validation evidence, production work, and releases will live inside a studio.</p>
+    </div>
   } @else {
-    <div class="workspace-heading">
-      <div><p class="eyebrow">Current workspace</p><h2>{{ selectedStudio()?.name }}</h2><p>Review the studio portfolio and choose where to focus next.</p></div>
-      <label class="studio-picker"><span>Studio</span><select [value]="selectedStudioId()" (change)="changeStudio($event)">@for (studio of studios(); track studio.id) { <option [value]="studio.id">{{ studio.name }}</option> }</select></label>
+    <div class="studio-row">
+      <label>
+        <span>Studio</span>
+        <select [value]="selectedStudioId()" (change)="changeStudio($event)">
+          @for (studio of studios(); track studio.id) {
+            <option [value]="studio.id">{{ studio.name }}</option>
+          }
+        </select>
+      </label>
     </div>
 
-    <div class="metrics" aria-label="Studio game summary">
-      <article><span>Total games</span><strong>{{ games().length }}</strong><small>In this studio</small></article>
-      <article><span>In validation</span><strong>{{ validationCount() }}</strong><small>Gathering evidence</small></article>
-      <article><span>In production</span><strong>{{ productionCount() }}</strong><small>Actively being built</small></article>
-    </div>
-
-    @if (errorMessage()) { <div class="state-panel error" role="alert">{{ errorMessage() }}</div> }
-    @else if (loadingGames()) { <div class="state-panel">Loading games...</div> }
-    @else if (games().length === 0) { <div class="empty-state compact"><p class="eyebrow">No games found</p><h3>This studio has no games yet.</h3><p>Create a game through the API and it will appear here.</p></div> }
-    @else {
-      <div class="section-heading"><div><p class="eyebrow">Portfolio</p><h3>Games</h3></div><span>{{ games().length }} total</span></div>
-      <div class="game-grid">
-        @for (game of games(); track game.id) {
-          <button class="game-card" type="button" (click)="openGame(game.id)">
-            <div class="card-topline"><span class="stage">{{ formatLabel(game.currentStage) }}</span><span class="validation">{{ formatLabel(game.validationStatus) }}</span></div>
-            <div><h4>{{ game.title }}</h4><p>{{ game.shortPitch }}</p></div>
-            <dl><div><dt>Genre</dt><dd>{{ game.genre }}</dd></div><div><dt>Platforms</dt><dd>{{ game.targetPlatforms }}</dd></div></dl>
-            <span class="card-action">Open game dashboard <span aria-hidden="true">&rarr;</span></span>
-          </button>
-        }
+    <section class="summary-panel" aria-label="Studio overview">
+      <div class="stat-strip" aria-label="Studio game summary">
+        <article>
+          <span>Total Games</span>
+          <strong>{{ games().length }}</strong>
+        </article>
+        <article class="dark">
+          <span>In Validation</span>
+          <strong>{{ validationCount() }}</strong>
+        </article>
+        <article>
+          <span>In Production</span>
+          <strong>{{ productionCount() }}</strong>
+        </article>
       </div>
+    </section>
+
+    @if (errorMessage()) {
+      <div class="state-panel error" role="alert">{{ errorMessage() }}</div>
+    } @else if (loadingGames()) {
+      <div class="state-panel">Loading games...</div>
+    } @else {
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Portfolio</p>
+          <h3>Games</h3>
+        </div>
+        <button type="button" (click)="createGame()">New Game</button>
+      </div>
+
+      @if (games().length === 0) {
+        <div class="empty-state compact">
+          <p class="eyebrow">No games found</p>
+          <h3>This studio has no games yet.</h3>
+          <p>Create a game and it will appear here.</p>
+        </div>
+      } @else {
+        <div class="game-grid">
+          @for (game of games(); track game.id) {
+            <button class="game-card" type="button" (click)="openGame(game.id)">
+              <div class="card-topline">
+                <span class="stage">{{ formatLabel(game.currentStage) }}</span>
+                <span class="validation">{{ formatLabel(game.validationStatus) }}</span>
+              </div>
+              <div>
+                <h4>{{ game.title }}</h4>
+                <p>{{ displayValue(game.shortPitch) }}</p>
+              </div>
+              <dl>
+                <div><dt>Genre</dt><dd>{{ displayValue(game.genre) }}</dd></div>
+                <div><dt>Platforms</dt><dd>{{ displayValue(game.targetPlatforms) }}</dd></div>
+              </dl>
+              <span class="card-action">Open Dashboard</span>
+            </button>
+          }
+        </div>
+      }
     }
   }
 </section>

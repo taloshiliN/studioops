@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface PlaytestRepository extends JpaRepository<Playtest, Long> {
     List<Playtest> findByGame_IdOrderBySessionDateDesc(Long gameId);
+
+    void deleteByGame_Id(Long gameId);
 }

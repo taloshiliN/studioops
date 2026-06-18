@@ -6,4 +6,6 @@ import java.util.Optional;
 
 public interface LaunchPlanRepository extends JpaRepository<LaunchPlan, Long> {
     Optional<LaunchPlan> findByGame_Id(Long gameId);
+
+    void deleteByGame_Id(Long gameId);
 }

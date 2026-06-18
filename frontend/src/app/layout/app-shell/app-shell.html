@@ -3,15 +3,18 @@
 
   <main>
     <header class="topbar">
-      <div>
-        <small>{{ pageContext() }}</small>
+      <div class="page-title">
         <h1>{{ pageTitle() }}</h1>
+        <small>{{ pageContext() }}</small>
       </div>
 
       @if (user(); as currentUser) {
-        <div class="user-summary">
+        <div class="user-summary" aria-label="Signed in user">
           <span>{{ currentUser.name.charAt(0).toUpperCase() }}</span>
-          <div><strong>{{ currentUser.name }}</strong><small>{{ currentUser.email }}</small></div>
+          <div>
+            <strong>{{ currentUser.name }}</strong>
+            <small>{{ currentUser.email }}</small>
+          </div>
         </div>
       }
     </header>
